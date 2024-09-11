@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white"
+    android:layout_marginBottom="10dp"
+
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="261dp"
+        android:orientation="vertical"
+        tools:ignore="MissingConstraints">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="257dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtmadon"
+                android:layout_width="match_parent"
+                android:layout_height="41dp"
+                android:text="Ma Don"
+                android:textColor="@color/black"
+                android:background="@color/grey"
+                android:textSize="19dp"></TextView>
+
+            <TextView
+                android:id="@+id/txtdiachia"
+                android:layout_width="match_parent"
+                android:layout_height="73dp"
+                android:text="Dia Chi Giao Hang"
+                android:textSize="15dp"></TextView>
+
+            <TextView
+                android:id="@+id/txttongtien"
+                android:layout_width="match_parent"
+                android:layout_height="39dp"
+                android:text="Tong Tien"
+                android:textSize="15dp"></TextView>
+
+            <TextView
+                android:id="@+id/txtsdt"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="Ngay Mua"
+                android:textSize="15dp"></TextView>
+
+            <TextView
+                android:id="@+id/txtdate"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:text="Ngay Mua"
+                android:textSize="15dp"></TextView>
+        </LinearLayout>
+
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DCDCDC"
+        android:layout_marginTop="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</LinearLayout>

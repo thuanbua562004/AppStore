@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">MYSTORE</string>
+    <string name="underline_text"><u>Tại đây.</u></string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="login_message">Please enter your login details</string>
+    <string name="register_message">Register to see more information</string>
+    <string name="welcome">Đăng Nhập</string>
+    <string name="language">Change Language</string>
+    <string name="or_login">Or Login With</string>
+    <string name="forgot_pass">Forgot Password</string>
+    <string name="have_an_account_register">Don\'t have an account? Register</string>
+    <string name="already_have_an_account_login">Already have an account? Login</string>
+    <string name="default_web_client_id">366168472159-jma6fehb2746h3462on7lbh8g18219dg.apps.googleusercontent.com</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>
