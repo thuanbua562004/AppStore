@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -47,9 +48,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".NotifiActiviity"
-            android:exported="false" />
-        <activity
             android:name=".Activity.UpdateProfile"
             android:exported="false" />
         <activity
@@ -68,25 +66,16 @@
             android:name=".Activity.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".Home"
-            android:exported="false" />
-        <activity
             android:name=".Activity.ProducDetail"
             android:exported="false" />
         <activity
             android:name=".Activity.Brand"
             android:exported="false" />
         <activity
-            android:name=".ProductActivity"
-            android:exported="false" />
-        <activity
             android:name=".Activity.CartActivity"
             android:exported="false" />
         <activity
             android:name=".Activity.Setting"
-            android:exported="false" />
-        <activity
-            android:name=".UserInfo"
             android:exported="false" />
         <activity
             android:name=".Activity.Login"

@@ -20,8 +20,8 @@
     <!-- Tên sản phẩm -->
     <EditText
         android:id="@+id/etProductName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:hint="Tên sản phẩm"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,8 +31,8 @@
     <!-- Giá sản phẩm -->
     <EditText
         android:id="@+id/etProductPrice"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:inputType="numberDecimal"
         android:hint="Giá sản phẩm"
         app:layout_constraintTop_toBottomOf="@+id/etProductName"
@@ -43,8 +43,8 @@
     <!-- Mô tả sản phẩm -->
     <EditText
         android:id="@+id/etProductDescription"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:hint="Mô tả sản phẩm"
         app:layout_constraintTop_toBottomOf="@+id/etProductPrice"
         app:layout_constraintStart_toStartOf="parent"

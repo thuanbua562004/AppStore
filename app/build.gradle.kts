@@ -35,6 +35,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
 }
 
 dependencies {
@@ -56,4 +57,8 @@ dependencies {
     implementation("commons-codec:commons-codec:1.14")
     implementation ("io.github.muddz:styleabletoast:2.4.0")
     implementation ("com.google.android.material:material:1.9.0")
+    implementation ("org.json:json:20210307")
+
+
+
 }

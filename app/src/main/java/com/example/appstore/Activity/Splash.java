@@ -1,6 +1,7 @@
 package com.example.appstore.Activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -8,8 +9,6 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.appstore.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 public class Splash extends AppCompatActivity {
 
@@ -27,11 +26,11 @@ public class Splash extends AppCompatActivity {
     }
 
     private void nextActivity() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            String uid = user.getUid();
+        SharedPreferences sharedPreferences = getSharedPreferences("AppStore", MODE_PRIVATE);
+        String user = sharedPreferences.getString("id", "");
+        if (user != null && !user.trim().equals("")) {
+            Log.i("TAG1", "nextActivity: " + user);
             startActivity(new Intent(Splash.this, MainActivity.class));
-            Log.i("TAG", "onComplete: "  + user.toString());
             finishAffinity();
         } else {
             startActivity(new Intent(Splash.this,Login.class));

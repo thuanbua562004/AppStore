@@ -2,6 +2,7 @@ package com.example.appstore.Activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +14,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.appstore.Api.CallApiUser;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.User;
 import com.example.appstore.R;
 import com.google.android.gms.auth.api.identity.BeginSignInRequest;
@@ -20,16 +23,16 @@ import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.auth.api.identity.SignInClient;
 import com.google.android.gms.auth.api.identity.SignInCredential;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import io.github.muddz.styleabletoast.StyleableToast;
 
@@ -40,6 +43,7 @@ public class Login extends AppCompatActivity {
     String email ,pass ;
     FirebaseAuth  mAuth ;
     private DatabaseReference mDatabase;
+    CallApiUser apiUser = new CallApiUser();
 
     private SignInClient oneTapClient;
     private BeginSignInRequest signInRequest;
@@ -54,6 +58,7 @@ public class Login extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         anhxa();
         handler();
+
         oneTapClient = Identity.getSignInClient(this);
         signInRequest = BeginSignInRequest.builder()
                 .setGoogleIdTokenRequestOptions(BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
@@ -64,16 +69,13 @@ public class Login extends AppCompatActivity {
                 .build();
 
     }
-        /// xu li cac chuc nang
     private void handler() {
-        //// chuyen trang dang ki
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(Login.this , Register.class));
             }
         });
-        //// dang nhap bang email
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,22 +84,54 @@ public class Login extends AppCompatActivity {
                 if(!email.isEmpty() || !pass.isEmpty()){
                     if(email.contains("@gmail.com")){
                         showProgressDialog();
-                        mAuth.signInWithEmailAndPassword(email, pass)
-                                .addOnCompleteListener(Login.this, new OnCompleteListener<AuthResult>() {
+
+                        apiUser.getUser(email, pass, new ApiCallback() {
+                            @Override
+                            public void onSuccess(String response) {
+                                runOnUiThread(new Runnable() {
                                     @Override
-                                    public void onComplete(@NonNull Task<AuthResult> task) {
-                                        if (task.isSuccessful()) {
-                                            FirebaseUser user = mAuth.getCurrentUser();
-                                            StyleableToast.makeText(Login.this, "Đăng Nhập Thành Công !", Toast.LENGTH_LONG, R.style.success).show();
-                                            startActivity(new Intent(Login.this , MainActivity.class));
-                                            finishAffinity();
-                                            hideProgressDialog();
-                                        } else {
-                                            hideProgressDialog();
+                                    public void run() {
+                                        if(response != null && response.length() == 0) {
                                             StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu !", Toast.LENGTH_LONG, R.style.fail).show();
+                                            return;
                                         }
+                                        try {
+                                            JSONArray jsonArray = new JSONArray(response);
+                                            JSONObject jsonObject = jsonArray.getJSONObject(0);
+                                            String id = jsonObject.getString("_id");
+                                            JSONObject jsonDetail = jsonObject.getJSONObject("details");
+                                            String email = jsonDetail.getString("email");
+                                            String password = jsonDetail.getString("password");
+                                            String adress = jsonDetail.getString("adress");
+                                            String dateBirth = jsonDetail.getString("dateBirth") ;
+                                            String name  = jsonDetail.getString("name");
+                                            String phoneNumber = jsonDetail.getString("phoneNumber");
+                                         /// goi va luu ss
+                                            session(id,email,password,adress,name,phoneNumber,dateBirth);
+                                        } catch (JSONException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        Log.i("TAG1", "run  : "+ response);
+                                        StyleableToast.makeText(Login.this, "Đăng Nhập Thành Công !", Toast.LENGTH_LONG, R.style.success).show();
+                                        hideProgressDialog();
+                                        startActivity(new Intent(Login.this , MainActivity.class));
+                                        finishAffinity();
+
                                     }
                                 });
+                            }
+
+                            @Override
+                            public void onError(String errorMessage) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        hideProgressDialog();
+                                        StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu !", Toast.LENGTH_LONG, R.style.fail).show();                            }
+                                });
+                            }
+                        });
+
                     }else {
                         StyleableToast.makeText(Login.this, "Email Không Đúng Định Dạng !", Toast.LENGTH_LONG, R.style.fail).show();
                     }
@@ -151,14 +185,11 @@ public class Login extends AppCompatActivity {
                     mAuth.signInWithCredential(firebaseCredential)
                             .addOnCompleteListener(this, task -> {
                                 if (task.isSuccessful()) {
-                                    // Sign in success, update UI with the signed-in user's information
                                     Log.d("TAG1", "signInWithCredential:success");
                                     FirebaseUser user = mAuth.getCurrentUser();
                                     String uid = user.getUid();
-                                    getdataFirebase(uid);
                                     updateUI(user);
                                 } else {
-                                    // If sign in fails, display a message to the user.
                                     Log.w("TAG1", "signInWithCredential:failure", task.getException());
                                     updateUI(null);
                                 }
@@ -171,25 +202,6 @@ public class Login extends AppCompatActivity {
         }
     }
 
-    private void getdataFirebase(String userId) {
-        mDatabase.child("users").child(userId).child("name").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (!task.isSuccessful()) {
-                    Log.e("firebase", "Error getting data", task.getException());
-                    if(task!=null && !task.equals("")){
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        String uid = user.getUid();
-                        writeNewUser(uid,"","","","");
-                    }
-                }
-                else {
-                    Log.d("firebase", String.valueOf(task.getResult().getValue()));
-                }
-            }
-        });
-    }
-
     private void updateUI(FirebaseUser user) {
         if (user != null) {
             // User is signed in
@@ -198,7 +210,6 @@ public class Login extends AppCompatActivity {
             StyleableToast.makeText(Login.this, "Đăng Nhập Thành Công !", Toast.LENGTH_LONG, R.style.success).show();
             finishAffinity();
         } else {
-            // User is signed out
             Log.d("TAG1", "User is signed out");
             StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại", Toast.LENGTH_LONG, R.style.fail).show();
         }
@@ -226,5 +237,17 @@ public class Login extends AppCompatActivity {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
+    }
+    private  void session (String id ,String email, String password, String adress ,String name ,String phoneNumber, String dateBirth){
+        SharedPreferences sharedPreferences = getSharedPreferences("AppStore", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("id", id);
+        editor.putString("email",email);
+        editor.putString("password",password);
+        editor.putString("adress", adress);
+        editor.putString("name",name);
+        editor.putString("phoneNumber",phoneNumber);
+        editor.putString("date", dateBirth);
+        editor.apply();
     }
 }

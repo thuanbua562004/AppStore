@@ -1,100 +1,62 @@
 package com.example.appstore.Activity;
 
+import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.bitmap.CircleCrop;
-import com.bumptech.glide.request.RequestOptions;
-import com.example.appstore.Model.User;
 import com.example.appstore.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import io.github.muddz.styleabletoast.StyleableToast;
 
 public class UsersF extends Fragment {
     TextView txtName, email, phonenumber, txtaddress, txtdate;
     ImageView imgUser, imgCart, imghistory, imgUpdate;
     Button btnUpdateProfile, imgLogout;
-    DatabaseReference mPostReference;
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_users, container, false);
-        mPostReference = FirebaseDatabase.getInstance().getReference();
         anhxa(view);
         handler(view);
-        getUserInFirebase();
+        getUser();
         return view;
     }
+    public void getUser(){
+         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("AppStore", Context.MODE_PRIVATE);
+         String emailss = sharedPreferences.getString("email","");
+        String name = sharedPreferences.getString("name","");
+        String phone = sharedPreferences.getString("phoneNumber","");
+        String address = sharedPreferences.getString("adress","");
+        String date =sharedPreferences.getString("date","");
 
-    private void getUserInFirebase() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        String uid = user.getUid();
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("users/" + uid);
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                User user = snapshot.getValue(User.class);
-                if (user != null) {
-                    String name = user.getName();
-                    String phone = user.getPhoneNumber();
-                    String address = user.getAddress();
-                    String date = user.getDateBirth();
-                    Log.i("TAG1", "onDataChange: " + user.toString());
-
-                    txtName.setText(name != null && !name.isEmpty() ? name : "Name Profile");
-                    phonenumber.setText(phone != null && !phone.isEmpty() ? phone : "PhoneNumber Null");
-                    txtaddress.setText(address != null && !address.isEmpty() ? address : "Address Null");
-                    txtdate.setText(date != null && !date.isEmpty() ? date : "Date Null");
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle error if needed
-            }
-        });
-
-        for (com.google.firebase.auth.UserInfo profile : user.getProviderData()) {
-            Uri photoUrl = profile.getPhotoUrl();
-            String emailuser = profile.getEmail();
-
-            email.setText(emailuser != null && !emailuser.isEmpty() ? emailuser : "NO Valid");
-
-            Glide.with(getContext())
-                    .load(photoUrl != null ? photoUrl : R.drawable.user)
-                    .apply(RequestOptions.bitmapTransform(new CircleCrop()))
-                    .into(imgUser);
-        }
+        txtName.setText(name != null && !name.isEmpty() ? name : "Name Profile");
+        phonenumber.setText(phone != null && !phone.isEmpty() ? phone : "PhoneNumber Null");
+        txtaddress.setText(address != null && !address.isEmpty() ? address : "Address Null");
+        txtdate.setText(date != null && !date.isEmpty() ? date : "Date Null");
+        email.setText(emailss);
     }
 
+
     private void handler(View view) {
-        imgLogout.setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
-            StyleableToast.makeText(getContext(), "Đăng Xuất!", Toast.LENGTH_LONG, R.style.success).show();
-            startActivity(new Intent(getContext(), Splash.class));
-            getActivity().finishAffinity();
+        imgLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("AppStore", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.clear();
+                editor.apply();
+                startActivity(new Intent(getContext(), Splash.class));
+                requireActivity().finishAffinity();
+            }
         });
 
         imgCart.setOnClickListener(v -> startActivity(new Intent(getContext(), CartActivity.class)));
