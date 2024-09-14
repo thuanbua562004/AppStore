@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AdminHomeActivity">
+
+    <LinearLayout
+        android:background="@color/white"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvDashboard"
+            android:layout_width="142dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:background="#696969"
+            android:text="Home"
+            android:textColor="@color/white"
+            android:textSize="40sp" />
+
+        <Button
+            android:id="@+id/btnProductManagement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="Sản phẩm"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvDashboard" />
+
+        <Button
+            android:id="@+id/btnOrderManagement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="Đơn hàng"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnProductManagement" />
+
+        <Button
+            android:id="@+id/btnCustomerManagement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="Khách hàng"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnOrderManagement" />
+
+
+        <Button
+                android:id="@+id/btnPromotionManagement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Khuyến mãi"
+                app:layout_constraintTop_toBottomOf="@+id/btnStaffManagement"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="16dp" />
+
+        <Button
+                android:id="@+id/btnReports"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Báo cáo và phân tích"
+                app:layout_constraintTop_toBottomOf="@+id/btnPromotionManagement"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="16dp" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Log out" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
