@@ -58,6 +58,7 @@ dependencies {
     implementation ("io.github.muddz:styleabletoast:2.4.0")
     implementation ("com.google.android.material:material:1.9.0")
     implementation ("org.json:json:20210307")
+    implementation ("com.google.code.gson:gson:2.10.1")
 
 
 

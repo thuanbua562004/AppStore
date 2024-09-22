@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.appstore.Api.CallApiUser;
+import com.example.appstore.Api.CallApi;
 import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.R;
 
@@ -20,7 +20,7 @@ public class Register extends AppCompatActivity {
     private EditText txtEmail, txtPass, txtRePass;
     private Button btnRegister , btnBackLogin;
     private ProgressDialog progressDialog;
-    CallApiUser  callApiUser = new CallApiUser();
+    CallApi callApiUser = new CallApi();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

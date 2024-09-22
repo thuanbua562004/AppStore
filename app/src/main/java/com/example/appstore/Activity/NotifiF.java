@@ -1,6 +1,5 @@
 package com.example.appstore.Activity;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,15 +13,19 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.appstore.Adapter.NotifiAdapter;
+import com.example.appstore.Api.CallApi;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Notifi;
 import com.example.appstore.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class NotifiF extends Fragment {
@@ -30,6 +33,7 @@ public class NotifiF extends Fragment {
     private List<Notifi> listNotifi;
     private NotifiAdapter notifiAdapter;
     private RecyclerView recyclerView;
+    CallApi apiNotifi = new CallApi();
 
     @Nullable
     @Override
@@ -42,31 +46,44 @@ public class NotifiF extends Fragment {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 1);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setAdapter(notifiAdapter);
-        getNotiList();
+        getNotifi();
         return view;
     }
-
-    @SuppressLint("MissingInflatedId")
-    private void getNotiList() {
-        mDatabase.child("noti").addValueEventListener(new ValueEventListener() {
+    public void getNotifi (){
+        apiNotifi.getListNotifi(new ApiCallback() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                listNotifi.clear();
-                for (DataSnapshot productSnapshot : dataSnapshot.getChildren()) {
-                    Notifi notifi = productSnapshot.getValue(Notifi.class);
-                    if (notifi != null) {
+            public void onSuccess(String response) {
+                try {
+                    JSONArray jsonArray = new JSONArray(response);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        String id = jsonObject.getString("_id");
+                        JSONObject jsonDetails = jsonObject.getJSONObject("details");
+                        String title ,info , img ,date ;
+                        Date date1 ;
+                        title = jsonDetails.getString("title");
+                        info = jsonDetails.getString("infoNoti");
+                        img = jsonDetails.getString("img1");
+                        date = jsonDetails.getString("dateCreate");
+                        Log.i("Notifi", "onSuccess: " + title + info + img + date);
+                        Notifi notifi = new Notifi(title,info,img,"",date);
                         listNotifi.add(notifi);
-                        Log.i("notifi", "Added to list: " + notifi.toString());
-                    } else {
-                        Log.e("FirebaseData", "Notifi object is null for key: " + productSnapshot.getKey());
                     }
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
                 }
-                notifiAdapter.notifyDataSetChanged();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        notifiAdapter.notifyDataSetChanged();
+                    }
+                });
+
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("FirebaseData", "DatabaseError: " + databaseError.getMessage());
+            public void onError(String errorMessage) {
+                          Log.i("Notifi", "Error: " + errorMessage);
             }
         });
     }

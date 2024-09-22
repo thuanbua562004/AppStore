@@ -19,7 +19,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class CallApiUser {
+public class CallApi {
 
     private OkHttpClient client = new OkHttpClient();
 
@@ -117,4 +117,97 @@ public class CallApiUser {
         });
     }
 
+    public  void updateUser(String id , String name ,String address,String date ,String phone , ApiCallback callback){
+        String url = "http://10.0.2.2:3000/api/update-user";
+        String json = "{\"id\":\"" + id + "\", \"name\":\"" + name + "\", \"address\":\"" + address + "\", \"dateBirth\":\"" + date + "\", \"phone\":\"" + phone + "\"}";        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
+        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new  Request.Builder()
+                .url(url)
+                .put(body)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.i("updateUser", "onFailure: " + e.getMessage());
+                callback.onError("Error" + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String responseData = response.body().string();
+                if(response.isSuccessful()){
+                 if(response.code()==500){
+                     Log.i("updateUser", "onFailure: " + responseData);
+                     callback.onError(response.toString());
+                 }else if(response.code()==404){
+                        Log.i("updateUser", "onFailure: " + response.body());
+                     callback.onError(response.toString());
+                 }else {
+                     callback.onSuccess(responseData);
+                 }
+                }
+
+            }
+        });
+    }
+    public void getListProduct (ApiCallback callback){
+        String url = "http://10.0.2.2:3000/api/product";
+        Request request =new  Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError("Yeu cau list product"+e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String responseData = response.body().string();
+                if (response.isSuccessful()) {
+                    if(response.code()==404){
+                        callback.onError("Error");
+                    } else if (response.code()==200) {
+                        if(!responseData.isEmpty() && !responseData.equals("")){
+                            callback.onSuccess(responseData);
+                        }
+                    }else {
+                        callback.onError("Error");
+                    }
+                } else {
+                    callback.onError("Error");
+                }
+
+            }
+        });
+    }
+    public  void  getListNotifi (ApiCallback callback){
+        String url = "http://10.0.2.2:3000/api/notifi";
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError("Error"  + e.getMessage());
+                Log.i("Notifi", "onFailure: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String resphoneData = response.body().string();
+                if (response.isSuccessful()){
+                    if (!resphoneData.isEmpty()&& !resphoneData.equals("")){
+                        callback.onSuccess(resphoneData);
+                    }
+                }else {
+                    callback.onError("Error Data Null" + resphoneData);
+                }
+            }
+        });
+
+    }
 }

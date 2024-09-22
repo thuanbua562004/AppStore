@@ -93,7 +93,7 @@ public class ProductAdapter  extends  RecyclerView.Adapter<ProductAdapter.Produc
         Intent intent = new Intent(mContext, ProducDetail.class);
         Bundle bundle = new Bundle();
         bundle.putSerializable("product" ,product);
-        bundle.putSerializable("id_product" ,product.getId_product());
+        bundle.putString("id_product", product.getId_product());
 
         intent.putExtras(bundle);
         mContext.startActivity(intent);

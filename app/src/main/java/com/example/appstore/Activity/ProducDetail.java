@@ -40,10 +40,10 @@ public class ProducDetail extends AppCompatActivity {
     Locale localeVN = new Locale("vi", "VN");
     NumberFormat vn = NumberFormat.getInstance(localeVN);
     RadioGroup radiogr1 ,radiogr2;
-    int radio1 , radio2 , id_product;
+    int radio1 , radio2 ;
     int number = 1 ;
     Product product;
-    String  check ="" ;
+    String  check ="" , id_product;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     FirebaseUser user;
@@ -60,7 +60,8 @@ public class ProducDetail extends AppCompatActivity {
             return;
         }
         product = (Product) getIntent().getSerializableExtra("product");
-        id_product = (int) getIntent().getSerializableExtra("id_product");
+         id_product =  getIntent().getStringExtra("id_product");
+
         anhxa();
         hanler();
         getProductDetail(product);
@@ -89,7 +90,7 @@ public class ProducDetail extends AppCompatActivity {
                     RadioButton selectedRadioButton1 = findViewById(radio2);
                     String selectedText2 = selectedRadioButton1.getText().toString();
                     int slProduct = Integer.valueOf(txtNumberProduct.getText().toString());
-                    Cart cart_product = new Cart(product.getName(), id_product, slProduct, selectedText2, selectedText1,product.getImg1(),product.getPrice());
+                    Cart cart_product = new Cart(product.getName(), Integer.valueOf(id_product), slProduct, selectedText2, selectedText1,product.getImg1(),product.getPrice());
 
                     String id_user_isidCart = user.getUid();
                     String uniqueKey = id_product + "_" + selectedText1 + "_" + selectedText2;

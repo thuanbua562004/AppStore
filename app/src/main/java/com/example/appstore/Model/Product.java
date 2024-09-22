@@ -12,7 +12,7 @@ public class Product implements Serializable {
     public String img1;
     public String img2;
     public String info;
-    public int id;
+    public String id;
 
     public Product() {
     }
@@ -80,7 +80,7 @@ public class Product implements Serializable {
         this.info = info;
     }
 
-    public int getId_product() {
+    public String getId_product() {
         return id;
     }
 
@@ -89,8 +89,7 @@ public class Product implements Serializable {
     }
 
 
-
-    public Product(Map<String, String> color, Map<String, String> size, int price, String name, String type, String img1, String img2, String info, int id_product) {
+    public Product(Map<String, String> color, Map<String, String> size, int price, String name, String type, String img1, String img2, String info, String id) {
         this.color = color;
         this.size = size;
         this.price = price;

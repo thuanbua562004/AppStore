@@ -14,7 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.appstore.Api.CallApiUser;
+import com.example.appstore.Api.CallApi;
 import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.User;
 import com.example.appstore.R;
@@ -43,7 +43,7 @@ public class Login extends AppCompatActivity {
     String email ,pass ;
     FirebaseAuth  mAuth ;
     private DatabaseReference mDatabase;
-    CallApiUser apiUser = new CallApiUser();
+    CallApi apiUser = new CallApi();
 
     private SignInClient oneTapClient;
     private BeginSignInRequest signInRequest;
@@ -102,12 +102,12 @@ public class Login extends AppCompatActivity {
                                             JSONObject jsonDetail = jsonObject.getJSONObject("details");
                                             String email = jsonDetail.getString("email");
                                             String password = jsonDetail.getString("password");
-                                            String adress = jsonDetail.getString("adress");
+                                            String adress1 = jsonDetail.getString("address");
                                             String dateBirth = jsonDetail.getString("dateBirth") ;
                                             String name  = jsonDetail.getString("name");
                                             String phoneNumber = jsonDetail.getString("phoneNumber");
                                          /// goi va luu ss
-                                            session(id,email,password,adress,name,phoneNumber,dateBirth);
+                                            session(id,email,password,adress1,name,phoneNumber,dateBirth);
                                         } catch (JSONException e) {
                                             throw new RuntimeException(e);
                                         }

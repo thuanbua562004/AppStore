@@ -21,17 +21,24 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.example.appstore.Adapter.ProductAdapter;
 import com.example.appstore.Adapter.SliderAdapter;
+import com.example.appstore.Api.CallApi;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.PhotoSlide;
 import com.example.appstore.Model.Product;
 import com.example.appstore.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -47,6 +54,7 @@ public class HomeF extends Fragment {
     List<PhotoSlide> listPhoto;
     EditText edtKeySearch;
     Timer timer;
+    CallApi callApiPro = new CallApi();
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -115,33 +123,60 @@ public class HomeF extends Fragment {
         trouser = view.findViewById(R.id.trouser);
         jacket = view.findViewById(R.id.jacket);
     }
-
     public void getListProduct() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("products");
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        callApiPro.getListProduct(new ApiCallback() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                listProduct.clear();
-                for (DataSnapshot productSnapshot : dataSnapshot.getChildren()) {
-                    Product product = productSnapshot.getValue(Product.class);
-                    if (product != null) {
-                        listProduct.add(product);
-                        Log.i("product", "onDataChange: " + product);
-                    } else {
-                        Log.i("product", "onDataChange: Null product detected");
+            public void onSuccess(String response) {
+                Log.i("ListPro", "onSuccess: " + response);
+                try {
+
+                    Gson gson = new Gson();
+                    Type type = new TypeToken<Map<String, String>>() {}.getType();
+                    JSONArray jsonArray = new JSONArray(response);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        try {
+                            String id_pro = jsonObject.getString("_id");
+                            JSONObject jsonDetail = jsonObject.getJSONObject("details");
+                            String name = jsonDetail.getString("name");
+                            Integer price = Integer.valueOf(jsonDetail.getString("price"));
+                            String img1 = jsonDetail.getString("img1");
+                            String info = jsonDetail.optString("info", "");
+
+                            JSONObject colorObject = jsonDetail.getJSONObject("color");
+                            JSONObject sizeObject = jsonDetail.getJSONObject("size");
+
+                            Map<String, String> colorMap = gson.fromJson(colorObject.toString(), type);
+                            Map<String, String> sizeMap = gson.fromJson(sizeObject.toString(), type);
+
+                            Product product = new Product(colorMap, sizeMap, price, name, "Ao", img1, "", info,id_pro);
+                            listProduct.add(product);
+                        } catch (JSONException e) {
+                            Log.e("ListPro", "Error parsing JSON object at index " + i + ": " + e.getMessage());
+                        }
                     }
-                }
-                if (productAdapter != null) {
-                    productAdapter.notifyDataSetChanged();
+
+                    if(productAdapter!=null){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                productAdapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
+                } catch (JSONException e) {
+                    Log.e("ListPro", "Error parsing JSON response: " + e.getMessage());
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("product", "DatabaseError: " + databaseError.getMessage());
+            public void onError(String errorMessage) {
+                Log.e("product", "onDataChange: " + errorMessage);
+                // Optionally show an error message to the user
             }
         });
     }
+
 
     public void getSearch() {
         edtKeySearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {

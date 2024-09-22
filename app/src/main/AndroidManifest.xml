@@ -83,6 +83,9 @@
         <activity
             android:name=".Activity.Register"
             android:exported="false" />
+        <activity
+            android:name=".Activity.UsersF">
+        </activity>
     </application>
 
 </manifest>
