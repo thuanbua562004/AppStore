@@ -188,6 +188,7 @@ public class Login extends AppCompatActivity {
                                     Log.d("TAG1", "signInWithCredential:success");
                                     FirebaseUser user = mAuth.getCurrentUser();
                                     String uid = user.getUid();
+                                    //////THEM
                                     updateUI(user);
                                 } else {
                                     Log.w("TAG1", "signInWithCredential:failure", task.getException());

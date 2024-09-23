@@ -1,6 +1,7 @@
 package com.example.appstore.Adapter;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,12 +16,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.appstore.Api.CallApi;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Cart;
 import com.example.appstore.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -31,12 +30,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     private List<Cart> listCart;
     Locale localeVN = new Locale("vi", "VN");
     NumberFormat vn = NumberFormat.getInstance(localeVN);
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private DatabaseReference databaseReference;
-    FirebaseAuth mAuth;
-    FirebaseUser user;
-    String key_product;
-
+    CallApi callApi = new CallApi();
     public CartAdapter(Context mContext, List<Cart> listCart) {
         this.mContext = mContext;
         this.listCart = listCart;
@@ -72,7 +66,20 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
                 quantity++;
                 cart.setNumber(quantity);
                 notifyDataSetChanged();
-                updateNumber(quantity, String.valueOf(cart.getId_product()), cart.getColor(), cart.getSize());
+                String id = getUserId();
+                callApi.updateCart(id, cart.getId_product(), cart.getNumber(), new ApiCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Log.i("update", "onSuccess: " + response);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.i("update", "onSuccess: " + errorMessage);
+
+                    }
+                });
+
             }
         });
         holder.btnMinus.setOnClickListener(new View.OnClickListener() {
@@ -86,13 +93,38 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
                 quantity--;
                 cart.setNumber(quantity);
                 notifyDataSetChanged();
-                updateNumber(quantity, String.valueOf(cart.getId_product()), cart.getColor(), cart.getSize());
+                String id = getUserId();
+                callApi.updateCart(id, cart.getId_product(), cart.getNumber(), new ApiCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Log.i("update", "onSuccess: " + response);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.i("update", "onSuccess: " + errorMessage);
+
+                    }
+                });
             }
         });
         holder.btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                delteProduct(String.valueOf(cart.getId_product()), cart.getColor(), cart.getSize());
+                String id = getUserId();
+                callApi.deleteItemCart(id, cart.getId_product(), new ApiCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Log.i("update", "onSuccess: " + response);
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.i("update", "onSuccess: " + errorMessage);
+
+                    }
+                });
+                notifyDataSetChanged();
             }
         });
 
@@ -123,33 +155,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         }
 
     }
-
-    public void updateNumber(int number, String id, String color, String size) {
-        key_product = id + "_" + color + "_" + size;
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = database.getReference("cart/" + user.getUid() + "/" + key_product + "/");
-        databaseReference.child("number").setValue(number)
-                .addOnSuccessListener(aVoid -> {
-                    // Update successful
-                    System.out.println("Item list updated successfully.");
-                })
-                .addOnFailureListener(e -> {
-                    // Update failed
-                    System.out.println("Failed to update item list: " + e);
-                });
-    }
-
-    public void delteProduct(String id, String color, String size) {
-        key_product = id + "_" + color + "_" + size;
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference("cart")
-                .child(user.getUid())
-                .child(key_product);
-        databaseReference.removeValue()
-                .addOnSuccessListener(aVoid -> {
-                })
-                .addOnFailureListener(e -> {
-                });
+    public  String getUserId (){
+        SharedPreferences pref = mContext.getSharedPreferences("AppStore",Context.MODE_PRIVATE);
+        String userId = pref.getString("id","");
+        return  userId;
     }
 }
 

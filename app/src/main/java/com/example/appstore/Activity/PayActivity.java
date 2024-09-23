@@ -2,6 +2,7 @@ package com.example.appstore.Activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -15,31 +16,26 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.appstore.Adapter.PayAdapter;
+import com.example.appstore.Api.CallApi;
 import com.example.appstore.Api.CreateOrder;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Cart;
 import com.example.appstore.Model.HistoryBuy;
-import com.example.appstore.Model.User;
 import com.example.appstore.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
 
 import org.json.JSONObject;
 
 import java.text.NumberFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -67,16 +63,14 @@ public class PayActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private ProgressDialog progressDialog;
     EditText edtphoneNumber ,edtadress ;
-
+    CallApi callApi =new CallApi();
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pay_avtivity);
 
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+
 
         StrictMode.ThreadPolicy policy = new
                 StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -124,25 +118,11 @@ public class PayActivity extends AppCompatActivity {
         }
     }
     public void infoClient (){
-        String id = user.getUid();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-
-        DatabaseReference myRef =database.getReference("users/"+id);
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                User user = snapshot.getValue(User.class);
-                String phone = user.getPhoneNumber();
-                String adress = user.getAddress();
-                edtadress.setText(adress);
-                edtphoneNumber.setText(phone);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+        SharedPreferences sharedPreferences = getSharedPreferences("AppStore",MODE_PRIVATE);
+        String adress = sharedPreferences.getString("adress","");
+        String phone = sharedPreferences.getString("phoneNumber","");
+        edtadress.setText(adress);
+        edtphoneNumber.setText(phone);
     }
 
     private void setPrice() {
@@ -157,7 +137,6 @@ public class PayActivity extends AppCompatActivity {
              StyleableToast.makeText(PayActivity.this, "Vui lòng  không để  trắng thông tin!", Toast.LENGTH_LONG, R.style.success).show();
              return;
          }
-            showProgressDialog();
             String methodPay = getSelectedPaymentMethod();
             if (methodPay.equals("Qua Ngân Hàng")) {
                 getPayMoMo();
@@ -232,25 +211,37 @@ public class PayActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         ZaloPaySDK.getInstance().onResult(intent);
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void saveHistoryBuy(String methodPay) {
+        showProgressDialog();
         if (user == null) return;
+        SharedPreferences sharedPreferences  = getSharedPreferences("AppStore",MODE_PRIVATE);
 
         Random random = new Random();
         int key = random.nextInt();
-        String id = user.getUid() + "_" + key;
+        String id = sharedPreferences.getString("id","");
         String adress ,phoneNumber ;
         adress = edtadress.getText().toString();
         phoneNumber = edtphoneNumber.getText().toString();
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(list);
 
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        String dateTimeString = currentDateTime.format(formatter);
+        callApi.saveHistoryBuy(id+"_"+key, adress, methodPay, totalPrice, phoneNumber, jsonString, new ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                Log.i("history", "onSuccess: " + response);
+                deleteCart(id);
+            }
 
-        historyBuy = new HistoryBuy(user.getDisplayName(), totalPrice+25000, list, adress,phoneNumber,dateTimeString ,methodPay);
-        mDatabase.child("history_buy").child(id).setValue(historyBuy);
-        mDatabase.child("cart").child(user.getUid()).removeValue();
+            @Override
+            public void onError(String errorMessage) {
+                Log.i("history", "onSuccess: " + errorMessage);
+
+            }
+        });
         hideProgressDialog();
+    }
+    public  void deleteCart(String userID ){
+        callApi.deleteCart(userID);
     }
     private void showProgressDialog() {
         progressDialog = new ProgressDialog(this);

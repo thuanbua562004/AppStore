@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Cart implements Serializable {
     private String nameProduct ;
-    private int id_product;
+    private String id_product;
     private int number;
     private String size;
     private String color ;
@@ -14,7 +14,7 @@ public class Cart implements Serializable {
     public Cart() {
     }
 
-    public Cart(String nameProduct, int id_product, int number, String size, String color, String imgProduct, int price) {
+    public Cart(String nameProduct, String id_product, int number, String size, String color, String imgProduct, int price) {
         this.nameProduct = nameProduct;
         this.id_product = id_product;
         this.number = number;
@@ -32,11 +32,11 @@ public class Cart implements Serializable {
         this.nameProduct = nameProduct;
     }
 
-    public int getId_product() {
+    public String getId_product() {
         return id_product;
     }
 
-    public void setId_product(int id_product) {
+    public void setId_product(String id_product) {
         this.id_product = id_product;
     }
 

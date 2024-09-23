@@ -1,28 +1,28 @@
 package com.example.appstore.Activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.appstore.Adapter.CartAdapter;
+import com.example.appstore.Api.CallApi;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Cart;
 import com.example.appstore.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.text.NumberFormat;
@@ -32,35 +32,78 @@ import java.util.Locale;
 
 public class CartActivity extends AppCompatActivity {
     List<Cart> listCart  ;
-
+    CallApi callApi = new CallApi();
     CartAdapter cartAdapter ;
     RecyclerView recyclerView;
-    FirebaseAuth mAuth;
-    FirebaseUser user;
-    String id_cart;
     TextView txtToltalPrice ,txtTRong;
     Locale localeVN = new Locale("vi", "VN");
     NumberFormat vn = NumberFormat.getInstance(localeVN);
     Button btnBuy  ;
     ImageView btnBack ;
+    LinearLayout thanhtoan ;
     int total = 0;
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
         txtToltalPrice =findViewById(R.id.txtToltalPrice);
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        id_cart = user.getUid();
-        listCart = new ArrayList<>();
-        getCart();
+        thanhtoan = findViewById(R.id.thanhtoan);
         anhxa();
+        listCart = new ArrayList<>();
         cartAdapter = new CartAdapter(this,listCart);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(cartAdapter);
         buyProduct();
         back();
+        getCart();
     }
+
+    public void getCart(){
+        callApi.getCart(new ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONArray jsonArray = new JSONArray(response);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        JSONArray jsonDetails = jsonObject.getJSONArray("details");
+
+                        for (int j = 0; j < jsonDetails.length(); j++) {
+                            JSONObject jsonDetail = jsonDetails.getJSONObject(j);
+                            String id_product = jsonDetail.getString("_id");
+                            String nameProduct = jsonDetail.getString("nameProduct");
+                            int number = jsonDetail.getInt("number");
+                            String size = jsonDetail.getString("size");
+                            String color = jsonDetail.getString("color");
+                            String img = jsonDetail.getString("imgProduct");
+                            int price = jsonDetail.getInt("price");
+                            Cart cart = new Cart(nameProduct, id_product, number, size, color, img, price);
+
+                            listCart.add(cart);
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.i("Cart", "error: "+e);
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        cartAdapter.notifyDataSetChanged();
+                        checkCart();
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+
+            }
+        });
+    }
+
     private void buyProduct() {
         btnBuy.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,6 +117,22 @@ public class CartActivity extends AppCompatActivity {
             }
         });
     }
+    private void checkCart() {
+        if (listCart == null || listCart.isEmpty()) {
+            Log.i("checkCart", "Giỏ hàng trống hoặc chưa được khởi tạo.");
+            txtTRong.setVisibility(View.VISIBLE);
+            txtTRong.setText("Giỏ Hàng Trống");
+            thanhtoan.setVisibility(View.GONE);
+        } else {
+            for (int i = 0; i < listCart.size(); i++) {
+                Cart cart = listCart.get(i);
+                total += cart.getPrice();
+            }
+                txtToltalPrice.setText("Tạm tính: " + vn.format(total)+"d");
+        }
+    }
+
+
 
     private void anhxa() {
         recyclerView = findViewById(R.id.rcvCart);
@@ -81,45 +140,6 @@ public class CartActivity extends AppCompatActivity {
         txtTRong =findViewById(R.id.txtIsemty);
         btnBack =findViewById(R.id.backBtn);
     }
-
-    private void getCart() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("cart").child(id_cart);
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                listCart.clear();
-                for (DataSnapshot productSnapshot : dataSnapshot.getChildren()) {
-                    // Loại trừ nút 'items' (nếu có)
-                    if (!productSnapshot.getKey().equals("items")) {
-                        Cart cart = productSnapshot.getValue(Cart.class);
-                        if (cart != null) {
-                            listCart.add(cart);
-                            Log.i("cart", "Added to list: " + cart.toString());
-                        } else {
-                            Log.e("FirebaseData", "Cart object is null for key: " + productSnapshot.getKey());
-                        }
-                    }
-                }
-                 total = 0;
-                for (Cart cart : listCart) {
-                    total += cart.getPrice() * cart.getNumber();
-                }
-                txtToltalPrice.setText("Tổng Tiền:  " + vn.format(total) + " VND");
-                cartAdapter.notifyDataSetChanged();
-                if (total==0){
-                    btnBuy.setVisibility(View.GONE);
-                    txtToltalPrice.setVisibility(View.GONE);
-                    txtTRong.setText("Giỏ Hàng Trống!");
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("FirebaseData", "DatabaseError: " + databaseError.getMessage());
-            }
-        });
-    }
-
     //////BACK
     private void back() {
         btnBack.setOnClickListener(new View.OnClickListener() {

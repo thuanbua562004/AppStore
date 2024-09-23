@@ -210,4 +210,165 @@ public class CallApi {
         });
 
     }
+
+    public void addToCart (String userId ,String id_color_size,String color ,String id_product,String imgProduct,String nameProduct,int number,int price,String size,ApiCallback apiCallback){
+        String url = "http://10.0.2.2:3000/api/add-cart";
+        String json = "{"
+                + "\"userId\":\"" + userId + "\","
+                + "\"id_color_size\":\"" + id_color_size + "\","
+                + "\"color\":\"" + color + "\","
+                + "\"productId\":\"" + id_product + "\","
+                + "\"imgProduct\":\"" + imgProduct + "\","
+                + "\"nameProduct\":\"" + nameProduct + "\","
+                + "\"number\":\"" + number + "\","
+                + "\"price\":\"" + price + "\","
+                + "\"size\":\"" + size + "\""
+                + "}";
+        RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                apiCallback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.code() == 501) {
+                    String errorBody = response.body().string();
+                    Log.d("HTTP",   errorBody);
+                    apiCallback.onSuccess( errorBody);
+                } else {
+                    apiCallback.onSuccess("Successful");
+                }
+
+            }
+        });
+    }
+
+    public  void getCart(ApiCallback callback){
+        String url ="http://10.0.2.2:3000/api/cart";
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String dataResphone = response.body().string();
+                Log.i("cart", "api: "+ dataResphone);
+                callback.onSuccess(dataResphone);
+            }
+        });
+    }
+    public  void updateCart(String userId ,String id_size_color ,Integer Number,ApiCallback callback ){
+        String url ="http://10.0.2.2:3000/api/update-cart";
+        String json = "{\"userid\":\"" + userId + "\", \"color_size\":\"" + id_size_color + "\", \"number\":\"" + Number + "\"}";
+        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .put(requestBody)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String dataResphone = response.body().string();
+                Log.i("cart", "api: "+ dataResphone);
+                callback.onSuccess(dataResphone);
+            }
+        });
+    }
+
+    public  void deleteItemCart(String userId ,String id_size_color, ApiCallback callback ){
+        String url ="http://10.0.2.2:3000/api/delItems-cart";
+        String json = "{\"userid\":\"" + userId + "\", \"color_size\":\"" + id_size_color + "\"}";
+        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .delete(requestBody)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String dataResphone = response.body().string();
+                Log.i("cart", "api: "+ dataResphone);
+                callback.onSuccess(dataResphone);
+            }
+        });
+    }
+
+    public  void deleteCart(String userId){
+        String url ="http://10.0.2.2:3000/api/del-cart";
+        String json = "{\"userid\":\"" + userId + "\"}";
+        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .delete(requestBody)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.i("cart", "api: "+ e.getMessage());
+
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String dataResphone = response.body().string();
+                Log.i("cart", "api: "+ dataResphone);
+            }
+        });
+    }
+    public void saveHistoryBuy(String id , String address, String method, Integer totalPrice, String phone, String listProduct , ApiCallback callback){
+        String url ="http://10.0.2.2:3000/api/history-buy";
+        String json =
+                "{\"id\":\"" + id +
+                        "\", \"address\":\"" + address +
+                        "\", \"method\":\"" + method +
+                        "\", \"totalPrice\":" + totalPrice +
+                        ", \"phone\":\"" + phone +
+                        "\", \"listProduct\":" + (listProduct) +
+                        "}";
+        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
+        Request  request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()){
+                    callback.onSuccess(response.body().string());
+                }
+
+            }
+        });
+    }
 }

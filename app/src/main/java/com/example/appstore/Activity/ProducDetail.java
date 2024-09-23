@@ -1,5 +1,6 @@
 package com.example.appstore.Activity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,23 +11,15 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.appstore.Model.Cart;
+import com.example.appstore.Api.CallApi;
+import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Product;
 import com.example.appstore.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -43,24 +36,19 @@ public class ProducDetail extends AppCompatActivity {
     int radio1 , radio2 ;
     int number = 1 ;
     Product product;
-    String  check ="" , id_product;
-    private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
-    FirebaseUser user;
+    String  id_product;
+    CallApi callApi = new CallApi();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_produc_detail);
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
 
         Bundle bundle = new Bundle();
         if (bundle==null){
             return;
         }
         product = (Product) getIntent().getSerializableExtra("product");
-         id_product =  getIntent().getStringExtra("id_product");
+         id_product = product.getId_product();
 
         anhxa();
         hanler();
@@ -90,37 +78,41 @@ public class ProducDetail extends AppCompatActivity {
                     RadioButton selectedRadioButton1 = findViewById(radio2);
                     String selectedText2 = selectedRadioButton1.getText().toString();
                     int slProduct = Integer.valueOf(txtNumberProduct.getText().toString());
-                    Cart cart_product = new Cart(product.getName(), Integer.valueOf(id_product), slProduct, selectedText2, selectedText1,product.getImg1(),product.getPrice());
-
-                    String id_user_isidCart = user.getUid();
                     String uniqueKey = id_product + "_" + selectedText1 + "_" + selectedText2;
+                    String name = product.getName();
+                    Integer price = (product.getPrice());
+                    String img = product.getImg1();
+                    SharedPreferences sharedPreferences = getSharedPreferences("AppStore" , MODE_PRIVATE);
+                    String userID = sharedPreferences.getString("id","");
+                    callApi.addToCart(userID, uniqueKey, selectedText1, id_product, img, name, slProduct, price, selectedText2, new ApiCallback() {
+                        @Override
+                        public void onSuccess(String response) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    StyleableToast.makeText(ProducDetail.this, response, Toast.LENGTH_LONG, R.style.success).show();
+                                    Log.i("addtoCart", "run: " +response);
+                                }
+                            });
+                        }
 
-                    isCheckSizeColor(id_user_isidCart, cart_product, id_user_isidCart, uniqueKey);
+                        @Override
+                        public void onError(String errorMessage) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                StyleableToast.makeText(ProducDetail.this, errorMessage, Toast.LENGTH_LONG, R.style.success).show();
+                                Log.i("addtoCart", "run: " +errorMessage);
+                            }
+                        });
+                        }
+                    });
                 }
             }
                 });
     }
 
-    private void isCheckSizeColor(String idCart, Cart cart ,String id_Cart , String checkSizeColor) {
-        DatabaseReference cartRef = mDatabase.child("cart").child(id_Cart + "/" + checkSizeColor);
-        cartRef.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()) {
-                    if (task.getResult().exists()) {
-                        showAlerDialog("Sản Phẩm Đã Có Trong Giỏ Hàng!");
-                    } else {
-                        mDatabase.child("cart/"+idCart+"/"+checkSizeColor).setValue(cart);
-                        showAlerDialog("Thêm Thành Công!");                    }
-                } else {
-                    Log.e("FirebaseError", "Failed to get data: " + task.getException());
-                }
-            }
-        });
-
-    }
-
-    private int getSelectNumber() {
+  private int getSelectNumber() {
         btnPlus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -184,12 +176,5 @@ public class ProducDetail extends AppCompatActivity {
         btnPlus = findViewById(R.id.btnplus);
         radiogr1 = findViewById(R.id.selectColor);
         radiogr2 = findViewById(R.id.selectSize);
-    }
-    private void  showAlerDialog(String mess){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Thông Báo! ");
-        builder.setMessage(mess);
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
     }
 }
