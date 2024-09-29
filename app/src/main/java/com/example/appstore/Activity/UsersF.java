@@ -15,12 +15,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.appstore.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class UsersF extends Fragment {
     TextView txtName, email, phonenumber, txtaddress, txtdate;
     ImageView imgUser, imgCart, imghistory, imgUpdate;
     Button btnUpdateProfile, imgLogout;
+    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -37,7 +44,14 @@ public class UsersF extends Fragment {
         String phone = sharedPreferences.getString("phoneNumber","");
         String address = sharedPreferences.getString("adress","");
         String date =sharedPreferences.getString("date","");
-
+        try {
+            Glide.with(this)
+                    .load(user.getPhotoUrl())
+                    .apply(RequestOptions.bitmapTransform(new CircleCrop()))
+                    .into(imgUser);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         txtName.setText(name != null && !name.isEmpty() ? name : "Name Profile");
         phonenumber.setText(phone != null && !phone.isEmpty() ? phone : "PhoneNumber Null");
         txtaddress.setText(address != null && !address.isEmpty() ? address : "Address Null");

@@ -156,7 +156,7 @@ public class HomeF extends Fragment {
                         }
                     }
 
-                    if(productAdapter!=null){
+                    if (getActivity() != null) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

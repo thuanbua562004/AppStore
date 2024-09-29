@@ -6,9 +6,6 @@ import androidx.annotation.NonNull;
 
 import com.example.appstore.Interface.ApiCallback;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -23,10 +20,10 @@ public class CallApi {
 
     private OkHttpClient client = new OkHttpClient();
 
-    public void getUser(String username, String password, ApiCallback callback) {
+    public void getUser(String email, ApiCallback callback) {
         String url = "http://10.0.2.2:3000/api/user";
 
-        String json = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
+        String json = "{\"email\":\"" + email + "\"}";
         RequestBody body = RequestBody.create(
                 json,
                 MediaType.get("application/json; charset=utf-8")
@@ -47,35 +44,23 @@ public class CallApi {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    Log.e("ApiService", "Mã lỗi không mong muốn: " + response.code());
-                    callback.onError("Yêu cầu không thành công: " + response);
-                    return;
-                }
-                String responseData = response.body().string();
-                try {
-                    JSONArray jsonArray = new JSONArray(responseData);
-                    if (jsonArray.length() == 0) {
-                        Log.e("ApiService", "Mảng rỗng");
-                        callback.onError("Mảng rỗng");
-                    } else {
-                        callback.onSuccess(responseData);
-
+                String data = response.body().string();
+                if(response.isSuccessful()){
+                    if (response.code()==201){
+                        callback.onSuccess(data);
+                    }else if (data.isEmpty() && data.length()==0) {
+                        callback.onError("Error");
                     }
-                } catch (JSONException e) {
-                    Log.e("ApiService", "Lỗi khi đọc dữ liệu JSON", e);
-                    callback.onError("Lỗi khi đọc dữ liệu JSON");
                 }
-
             }
 
         });
 
     }
 
-    public void createUser(String email, String password, ApiCallback callback) {
+    public void createUser(String email, String id, ApiCallback callback) {
         String url = "http://10.0.2.2:3000/api/create-user";
-        String json = "{\"email\":\"" + email + "\", \"password\":\"" + password + "\"}";
+        String json = "{\"email\":\"" + email + "\", \"id\":\"" + id + "\"}";
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
 
         Request request = new Request.Builder()
@@ -250,11 +235,13 @@ public class CallApi {
         });
     }
 
-    public  void getCart(ApiCallback callback){
+    public  void getCart(String userId,ApiCallback callback){
         String url ="http://10.0.2.2:3000/api/cart";
+        String json = "{\"id\":\"" + userId + "\"}";
+        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
         Request request = new Request.Builder()
                 .url(url)
-                .get()
+                .post(requestBody)
                 .build();
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -344,17 +331,40 @@ public class CallApi {
     public void saveHistoryBuy(String id , String address, String method, Integer totalPrice, String phone, String listProduct , ApiCallback callback){
         String url ="http://10.0.2.2:3000/api/history-buy";
         String json =
-                "{\"id\":\"" + id +
+                "{ \"id\":\"" + id +
                         "\", \"address\":\"" + address +
                         "\", \"method\":\"" + method +
                         "\", \"totalPrice\":" + totalPrice +
                         ", \"phone\":\"" + phone +
-                        "\", \"listProduct\":" + (listProduct) +
+                        "\", \"listProduct\":" + listProduct +
                         "}";
+
         RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
         Request  request = new Request.Builder()
                 .url(url)
                 .post(requestBody)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()){
+                    callback.onSuccess(response.body().string());
+                }
+
+            }
+        });
+    }
+
+    public void getHistoryBuy (ApiCallback callback){
+        String url ="http://10.0.2.2:3000/api/history-buy";
+        Request  request = new Request.Builder()
+                .url(url)
+                .get()
                 .build();
         client.newCall(request).enqueue(new Callback() {
             @Override

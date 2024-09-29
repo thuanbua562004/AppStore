@@ -16,14 +16,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.appstore.Api.CallApi;
 import com.example.appstore.Interface.ApiCallback;
-import com.example.appstore.Model.User;
 import com.example.appstore.R;
 import com.google.android.gms.auth.api.identity.BeginSignInRequest;
 import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.auth.api.identity.SignInClient;
 import com.google.android.gms.auth.api.identity.SignInCredential;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
@@ -44,7 +46,7 @@ public class Login extends AppCompatActivity {
     FirebaseAuth  mAuth ;
     private DatabaseReference mDatabase;
     CallApi apiUser = new CallApi();
-
+    FirebaseUser user;
     private SignInClient oneTapClient;
     private BeginSignInRequest signInRequest;
     private static final int REQ_ONE_TAP = 2;
@@ -84,53 +86,18 @@ public class Login extends AppCompatActivity {
                 if(!email.isEmpty() || !pass.isEmpty()){
                     if(email.contains("@gmail.com")){
                         showProgressDialog();
-
-                        apiUser.getUser(email, pass, new ApiCallback() {
-                            @Override
-                            public void onSuccess(String response) {
-                                runOnUiThread(new Runnable() {
+                        mAuth.signInWithEmailAndPassword(email, pass)
+                                .addOnCompleteListener(Login.this, new OnCompleteListener<AuthResult>() {
                                     @Override
-                                    public void run() {
-                                        if(response != null && response.length() == 0) {
+                                    public void onComplete(@NonNull Task<AuthResult> task) {
+                                        if (task.isSuccessful()) {
+                                            getDataUser(email);
+                                        } else {
                                             StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu !", Toast.LENGTH_LONG, R.style.fail).show();
-                                            return;
+                                            hideProgressDialog();
                                         }
-                                        try {
-                                            JSONArray jsonArray = new JSONArray(response);
-                                            JSONObject jsonObject = jsonArray.getJSONObject(0);
-                                            String id = jsonObject.getString("_id");
-                                            JSONObject jsonDetail = jsonObject.getJSONObject("details");
-                                            String email = jsonDetail.getString("email");
-                                            String password = jsonDetail.getString("password");
-                                            String adress1 = jsonDetail.getString("address");
-                                            String dateBirth = jsonDetail.getString("dateBirth") ;
-                                            String name  = jsonDetail.getString("name");
-                                            String phoneNumber = jsonDetail.getString("phoneNumber");
-                                         /// goi va luu ss
-                                            session(id,email,password,adress1,name,phoneNumber,dateBirth);
-                                        } catch (JSONException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                        Log.i("TAG1", "run  : "+ response);
-                                        StyleableToast.makeText(Login.this, "Đăng Nhập Thành Công !", Toast.LENGTH_LONG, R.style.success).show();
-                                        hideProgressDialog();
-                                        startActivity(new Intent(Login.this , MainActivity.class));
-                                        finishAffinity();
-
                                     }
                                 });
-                            }
-
-                            @Override
-                            public void onError(String errorMessage) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        hideProgressDialog();
-                                        StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu !", Toast.LENGTH_LONG, R.style.fail).show();                            }
-                                });
-                            }
-                        });
 
                     }else {
                         StyleableToast.makeText(Login.this, "Email Không Đúng Định Dạng !", Toast.LENGTH_LONG, R.style.fail).show();
@@ -185,14 +152,12 @@ public class Login extends AppCompatActivity {
                     mAuth.signInWithCredential(firebaseCredential)
                             .addOnCompleteListener(this, task -> {
                                 if (task.isSuccessful()) {
-                                    Log.d("TAG1", "signInWithCredential:success");
-                                    FirebaseUser user = mAuth.getCurrentUser();
-                                    String uid = user.getUid();
-                                    //////THEM
-                                    updateUI(user);
+                                     user = mAuth.getCurrentUser();
+                                    String id = user.getUid();
+                                    String email = user.getEmail();
+                                    createUserMonggo(id,email);
                                 } else {
                                     Log.w("TAG1", "signInWithCredential:failure", task.getException());
-                                    updateUI(null);
                                 }
                             });
                 }
@@ -202,23 +167,85 @@ public class Login extends AppCompatActivity {
             }
         }
     }
+    public void getDataUser(String email) {
+        apiUser.getUser(email, new ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (response == null || response.length() == 0) {
+                            hideProgressDialog();
+                            StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu!", Toast.LENGTH_LONG, R.style.fail).show();
+                            return;
+                        }
+                        try {
+                            JSONArray jsonArray = new JSONArray(response);
 
-    private void updateUI(FirebaseUser user) {
-        if (user != null) {
-            // User is signed in
-            Log.d("TAG1", "User signed in: " + user.toString());
-            startActivity(new Intent(Login.this , MainActivity.class));
-            StyleableToast.makeText(Login.this, "Đăng Nhập Thành Công !", Toast.LENGTH_LONG, R.style.success).show();
-            finishAffinity();
-        } else {
-            Log.d("TAG1", "User is signed out");
-            StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại", Toast.LENGTH_LONG, R.style.fail).show();
-        }
+                            // Check if the array has elements before trying to access them
+                            if (jsonArray.length() > 0) {
+                                JSONObject jsonObject = jsonArray.getJSONObject(0);
+                                String id = jsonObject.getString("_id");
+                                JSONObject jsonDetail = jsonObject.getJSONObject("details");
+                                String email = jsonDetail.getString("email");
+                                String address1 = jsonDetail.getString("address");
+                                String dateBirth = jsonDetail.getString("dateBirth");
+                                String name = jsonDetail.getString("name");
+                                String phoneNumber = jsonDetail.getString("phoneNumber");
+
+                                // Call the session method to save user info
+                                session(id, email, address1, name, phoneNumber, dateBirth);
+
+                                Log.i("TAG1", "run  : " + response);
+                                StyleableToast.makeText(Login.this, "Đăng Nhập Thành Công!", Toast.LENGTH_LONG, R.style.success).show();
+                                hideProgressDialog();
+                                startActivity(new Intent(Login.this, MainActivity.class));
+                                finishAffinity();
+                            } else {
+                                // Handle the case where no user data is returned
+                                hideProgressDialog();
+                                StyleableToast.makeText(Login.this, "Không tìm thấy dữ liệu người dùng!", Toast.LENGTH_LONG, R.style.fail).show();
+                            }
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        hideProgressDialog();
+                        StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu!", Toast.LENGTH_LONG, R.style.fail).show();
+                    }
+                });
+            }
+        });
     }
-    public void writeNewUser(String userId, String name, String adress,String dateBirth , String phoneNumber) {
-        User user = new User(name,adress,dateBirth,phoneNumber);
-        mDatabase.child("users").child(userId).setValue(user);
+    public void createUserMonggo(String id ,String email){
+        apiUser.createUser(email, id, new ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        getDataUser(email);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                if (errorMessage.equals("Đăng Kí Thất Bại. Tài Khoản Đã Tồn Tại!")){
+                    getDataUser(email);
+                }
+            }
+        });
     }
+
     private void anhxa() {
         btnRegister = findViewById(R.id.btnRegister);
         btnLogin = findViewById(R.id.btnLogin);
@@ -239,12 +266,12 @@ public class Login extends AppCompatActivity {
             progressDialog.dismiss();
         }
     }
-    private  void session (String id ,String email, String password, String adress ,String name ,String phoneNumber, String dateBirth){
+    private  void session (String id ,String email, String adress ,String name ,String phoneNumber, String dateBirth){
         SharedPreferences sharedPreferences = getSharedPreferences("AppStore", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        user = mAuth.getCurrentUser();
         editor.putString("id", id);
         editor.putString("email",email);
-        editor.putString("password",password);
         editor.putString("adress", adress);
         editor.putString("name",name);
         editor.putString("phoneNumber",phoneNumber);

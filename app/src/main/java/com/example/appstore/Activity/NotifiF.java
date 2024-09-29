@@ -25,7 +25,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class NotifiF extends Fragment {
@@ -49,7 +48,8 @@ public class NotifiF extends Fragment {
         getNotifi();
         return view;
     }
-    public void getNotifi (){
+
+    public void getNotifi() {
         apiNotifi.getListNotifi(new ApiCallback() {
             @Override
             public void onSuccess(String response) {
@@ -59,31 +59,33 @@ public class NotifiF extends Fragment {
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
                         String id = jsonObject.getString("_id");
                         JSONObject jsonDetails = jsonObject.getJSONObject("details");
-                        String title ,info , img ,date ;
-                        Date date1 ;
+                        String title, info, img, date;
                         title = jsonDetails.getString("title");
                         info = jsonDetails.getString("infoNoti");
                         img = jsonDetails.getString("img1");
                         date = jsonDetails.getString("dateCreate");
                         Log.i("Notifi", "onSuccess: " + title + info + img + date);
-                        Notifi notifi = new Notifi(title,info,img,"",date);
+                        Notifi notifi = new Notifi(title, info, img, "", date);
                         listNotifi.add(notifi);
                     }
                 } catch (JSONException e) {
-                    throw new RuntimeException(e);
+                    Log.e("Notifi", "JSON Exception: ", e);
                 }
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifiAdapter.notifyDataSetChanged();
-                    }
-                });
 
+                // Kiểm tra getActivity() trước khi gọi runOnUiThread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            notifiAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
             }
 
             @Override
             public void onError(String errorMessage) {
-                          Log.i("Notifi", "Error: " + errorMessage);
+                Log.i("Notifi", "Error: " + errorMessage);
             }
         });
     }

@@ -3,7 +3,7 @@ package com.example.appstore.Model;
 import java.util.List;
 
 public class HistoryBuy {
-    String nameClient ;
+    String id_donhang ;
     int totalPrice ;
     List<Cart> list ;
     String adress ;
@@ -15,7 +15,7 @@ public class HistoryBuy {
 
 
     public HistoryBuy(String nameClient, int totalPrice, List<Cart> list, String adress, String phoneNumber, String date, String methodPay) {
-        this.nameClient = nameClient;
+        this.id_donhang = nameClient;
         this.totalPrice = totalPrice;
         this.list = list;
         this.adress = adress;
@@ -41,11 +41,11 @@ public class HistoryBuy {
     }
 
     public String getNameClient() {
-        return nameClient;
+        return id_donhang;
     }
 
     public void setNameClient(String nameClient) {
-        this.nameClient = nameClient;
+        this.id_donhang = nameClient;
     }
 
     public int getTotalPrice() {

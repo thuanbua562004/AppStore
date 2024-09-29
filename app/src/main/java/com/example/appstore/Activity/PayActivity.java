@@ -26,11 +26,7 @@ import com.example.appstore.Api.CallApi;
 import com.example.appstore.Api.CreateOrder;
 import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Cart;
-import com.example.appstore.Model.HistoryBuy;
 import com.example.appstore.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
 import com.google.gson.Gson;
 
 import org.json.JSONObject;
@@ -57,10 +53,6 @@ public class PayActivity extends AppCompatActivity {
     private RadioGroup radioGroup;
     private Button checkOut;
     ImageView imageBack;
-    private HistoryBuy historyBuy;
-    private DatabaseReference mDatabase;
-    private FirebaseUser user;
-    private FirebaseAuth mAuth;
     private ProgressDialog progressDialog;
     EditText edtphoneNumber ,edtadress ;
     CallApi callApi =new CallApi();
@@ -70,15 +62,11 @@ public class PayActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pay_avtivity);
 
-
-
         StrictMode.ThreadPolicy policy = new
                 StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        // ZaloPay SDK Init
         ZaloPaySDK.init(553, Environment.SANDBOX);
-        // bind components with ids
 
         initializeViews();
         getListBuy();
@@ -105,6 +93,34 @@ public class PayActivity extends AppCompatActivity {
         rcvBuy.setAdapter(payAdapter);
     }
 
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void setupCheckoutButton() {
+        checkOut.setOnClickListener(v -> {
+         if(edtadress.getText().toString().trim().equals("") || edtphoneNumber.getText().toString().trim().equals("") ){
+             StyleableToast.makeText(PayActivity.this, "Vui lòng  không để  trắng thông tin!", Toast.LENGTH_LONG, R.style.success).show();
+             return;
+         }
+            String methodPay = getSelectedPaymentMethod();
+            if (methodPay.equals("Qua Ngân Hàng")) {
+                getPayMoMo();
+            } else if (methodPay.equals("Tiền mặt")) {
+                saveHistoryBuy("Tiền mặt");
+                startActivity(new Intent(PayActivity.this ,PaySuccess.class));
+                finish();
+                StyleableToast.makeText(PayActivity.this, "Đặt Hàng Thành Công!", Toast.LENGTH_LONG, R.style.success).show();
+
+            }
+        });
+    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        ZaloPaySDK.getInstance().onResult(intent);
+    }
+
+
     private void getListBuy() {
         Intent intent = getIntent();
         if (intent == null) return;
@@ -121,39 +137,21 @@ public class PayActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("AppStore",MODE_PRIVATE);
         String adress = sharedPreferences.getString("adress","");
         String phone = sharedPreferences.getString("phoneNumber","");
-        edtadress.setText(adress);
-        edtphoneNumber.setText(phone);
+        if(!adress.equals("null")){
+            edtadress.setText(adress);
+        }
+        if(!phone.equals("null")){
+            edtphoneNumber.setText(phone);
+        }
     }
 
     private void setPrice() {
         txtTotalTienhang.setText(vn.format(totalPrice) + " VND");
         txtTotal.setText(vn.format(totalPrice + 25000) + " VND");
     }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setupCheckoutButton() {
-        checkOut.setOnClickListener(v -> {
-         if(edtadress.getText().toString().trim().equals("") ||edtphoneNumber.getText().toString().trim().equals("") ){
-             StyleableToast.makeText(PayActivity.this, "Vui lòng  không để  trắng thông tin!", Toast.LENGTH_LONG, R.style.success).show();
-             return;
-         }
-            String methodPay = getSelectedPaymentMethod();
-            if (methodPay.equals("Qua Ngân Hàng")) {
-                getPayMoMo();
-            } else if (methodPay.equals("Tiền mặt")) {
-                saveHistoryBuy("Tiền mặt");
-                startActivity(new Intent(PayActivity.this ,PaySuccess.class));
-                finish();
-                StyleableToast.makeText(PayActivity.this, "Đặt Hàng Thành Công!", Toast.LENGTH_LONG, R.style.success).show();
-
-            }
-        });
-    }
-
     private String getSelectedPaymentMethod() {
         int selectedId = radioGroup.getCheckedRadioButtonId();
         if (selectedId == -1) {
-            hideProgressDialog();
             StyleableToast.makeText(PayActivity.this, "Vui lòng chọn phương thức thanh toán", Toast.LENGTH_LONG, R.style.success).show();
             return "";
         } else {
@@ -184,7 +182,6 @@ public class PayActivity extends AppCompatActivity {
                     @Override
                     public void onPaymentCanceled(String s, String s1) {
                         StyleableToast.makeText(PayActivity.this, "Thanh Toán Thất Bại!", Toast.LENGTH_LONG, R.style.fail).show();
-                        hideProgressDialog();
                         startActivity(new Intent(PayActivity.this ,PayFail.class));
                         finish();
                     }
@@ -192,7 +189,6 @@ public class PayActivity extends AppCompatActivity {
                     @Override
                     public void onPaymentError(ZaloPayError zaloPayError, String s, String s1) {
                         StyleableToast.makeText(PayActivity.this, "Thanh Toán Thất Bại!", Toast.LENGTH_LONG, R.style.fail).show();
-                        hideProgressDialog();
                         startActivity(new Intent(PayActivity.this ,PayFail.class));
                         finish();
                     }
@@ -201,31 +197,23 @@ public class PayActivity extends AppCompatActivity {
 
 
         } catch (Exception e) {
-            hideProgressDialog();
             e.printStackTrace();
         }
 
     }
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        ZaloPaySDK.getInstance().onResult(intent);
-    }
-    private void saveHistoryBuy(String methodPay) {
-        showProgressDialog();
-        if (user == null) return;
-        SharedPreferences sharedPreferences  = getSharedPreferences("AppStore",MODE_PRIVATE);
 
+    private void saveHistoryBuy(String methodPay) {
+        SharedPreferences sharedPreferences = getSharedPreferences("AppStore", MODE_PRIVATE);
         Random random = new Random();
         int key = random.nextInt();
-        String id = sharedPreferences.getString("id","");
-        String adress ,phoneNumber ;
-        adress = edtadress.getText().toString();
-        phoneNumber = edtphoneNumber.getText().toString();
+        String id = sharedPreferences.getString("id", "");
+        String address = edtadress.getText().toString();
+        String phoneNumber = edtphoneNumber.getText().toString();
+        Log.i("Pay", "saveHistoryBuy: " + address + methodPay);
         Gson gson = new Gson();
         String jsonString = gson.toJson(list);
 
-        callApi.saveHistoryBuy(id+"_"+key, adress, methodPay, totalPrice, phoneNumber, jsonString, new ApiCallback() {
+        callApi.saveHistoryBuy(id + "_" + key, address, methodPay, totalPrice, phoneNumber, jsonString, new ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 Log.i("history", "onSuccess: " + response);
@@ -234,20 +222,22 @@ public class PayActivity extends AppCompatActivity {
 
             @Override
             public void onError(String errorMessage) {
-                Log.i("history", "onSuccess: " + errorMessage);
-
+                Log.i("history", "onError: " + errorMessage);
             }
         });
-        hideProgressDialog();
     }
     public  void deleteCart(String userID ){
         callApi.deleteCart(userID);
     }
     private void showProgressDialog() {
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Loading...");
-        progressDialog.setCancelable(false); // Prevent dialog from being dismissed by back button
-        progressDialog.show();
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Loading...");
+            progressDialog.setCancelable(false);
+        }
+        if (!progressDialog.isShowing()) {
+            progressDialog.show();
+        }
     }
 
     private void hideProgressDialog() {
@@ -255,6 +245,7 @@ public class PayActivity extends AppCompatActivity {
             progressDialog.dismiss();
         }
     }
+
 
     private void back() {
         imageBack.setOnClickListener(new View.OnClickListener() {

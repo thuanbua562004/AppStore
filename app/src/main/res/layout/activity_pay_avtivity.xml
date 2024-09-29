@@ -183,7 +183,7 @@
                      android:layout_height="wrap_content"
                      android:layout_marginStart="8dp"
                      android:maxLines="1"
-                     android:text="Thành phố Hồ Chí Minh"
+                     android:hint="Vui long nhap !"
                      app:layout_constraintBottom_toBottomOf="@+id/imageView12"
                      app:layout_constraintStart_toEndOf="@+id/imageView12"
                      app:layout_constraintTop_toTopOf="@+id/imageView12"
@@ -250,10 +250,10 @@
                      android:id="@+id/editTextPhoneNumber"
                      android:layout_width="wrap_content"
                      android:layout_height="wrap_content"
-                     android:layout_marginStart="28dp"
+                     android:layout_marginStart="15dp"
                      android:layout_marginTop="4dp"
                      android:inputType="number"
-                     android:text="0388209247"
+                     android:hint="Vui long nhap PhoneNumber !"
                      app:layout_constraintStart_toStartOf="parent"
                      app:layout_constraintTop_toBottomOf="@+id/textViewPhoneChange" />
              </androidx.constraintlayout.widget.ConstraintLayout>

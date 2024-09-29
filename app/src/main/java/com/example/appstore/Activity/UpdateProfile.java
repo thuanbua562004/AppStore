@@ -3,6 +3,7 @@ package com.example.appstore.Activity;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -14,12 +15,23 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.appstore.Api.CallApi;
 import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Calendar;
 
@@ -28,17 +40,21 @@ import io.github.muddz.styleabletoast.StyleableToast;
 public class UpdateProfile extends AppCompatActivity {
     DatePickerDialog datePickerDialog;
     Button btnUpdate  ;
-    ImageButton btnChangeImg ;
+    ImageView btnChangeImg ;
     ImageButton button;
     ImageView back ;
     EditText edtName , edtPhoneNumber ,edtDiaChi  ,edtDate;
     private DatabaseReference mDatabase;
     private static final int REQUEST_CODE_PICK_IMAGE = 2;
     CallApi apiUser = new CallApi();
+    Uri uri ;
+    FirebaseUser user ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update_profile);
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
         anhxa();
         handler();
     }
@@ -63,6 +79,24 @@ public class UpdateProfile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 checkUpdate();
+
+                if(uri != null && !uri.equals("")){
+                    String  uid = user.getUid();
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    DatabaseReference myRef = database.getReference("users/" + uid);
+                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                            .setPhotoUri(uri)
+                            .build();
+
+                    user.updateProfile(profileUpdates)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                }
+                            });
+                }
+
+
             }
         });
         button.setOnClickListener(new View.OnClickListener() {
@@ -159,5 +193,24 @@ public class UpdateProfile extends AppCompatActivity {
         editor.putString("phoneNumber",phoneNumber);
         editor.putString("date", dateBirth);
         editor.apply();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 2 && resultCode == RESULT_OK && data != null) {
+            uri = data.getData();
+            if (uri != null) {
+                try {
+                    ImageView imageView = findViewById(R.id.openpicture);
+                    Glide.with(this)
+                            .load(uri)
+                            .apply(RequestOptions.bitmapTransform(new CircleCrop()))
+                            .into(imageView);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

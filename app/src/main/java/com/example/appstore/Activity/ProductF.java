@@ -89,14 +89,14 @@ public class ProductF extends Fragment {
                         }
                     }
 
-                  if(productAdapter!=null){
-                      getActivity().runOnUiThread(new Runnable() {
-                          @Override
-                          public void run() {
-                              productAdapter.notifyDataSetChanged();
-                          }
-                      });
-                  }
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                productAdapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
                 } catch (JSONException e) {
                     Log.e("ListPro", "Error parsing JSON response: " + e.getMessage());
                 }
