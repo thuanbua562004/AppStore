@@ -13,6 +13,18 @@ public class HistoryBuy {
     public HistoryBuy() {
     }
 
+    @Override
+    public String toString() {
+        return "HistoryBuy{" +
+                "id_donhang='" + id_donhang + '\'' +
+                ", totalPrice=" + totalPrice +
+                ", list=" + list +
+                ", adress='" + adress + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", date='" + date + '\'' +
+                ", methodPay='" + methodPay + '\'' +
+                '}';
+    }
 
     public HistoryBuy(String nameClient, int totalPrice, List<Cart> list, String adress, String phoneNumber, String date, String methodPay) {
         this.id_donhang = nameClient;

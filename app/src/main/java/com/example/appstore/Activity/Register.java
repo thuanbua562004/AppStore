@@ -60,7 +60,7 @@ public class Register extends AppCompatActivity {
                                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                                             String id = user.getUid();
                                             String email = user.getEmail();
-                                            createUserMonggo(id,email);
+                                            createUserMonggo(id,pass,email);
                                         } else {
                                             hideProgressDialog();
                                             StyleableToast.makeText(Register.this, "Đăng Kí Thất Bại! Vui Lòng Thử Lại.", Toast.LENGTH_LONG, R.style.fail).show();
@@ -84,8 +84,8 @@ public class Register extends AppCompatActivity {
             }
         });
     }
-    public void createUserMonggo(String id ,String email){
-        callApiUser.createUser(email, id, new ApiCallback() {
+    public void createUserMonggo(String id,String pass ,String email){
+        callApiUser.createUser(email, pass,id, new ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 runOnUiThread(new Runnable() {

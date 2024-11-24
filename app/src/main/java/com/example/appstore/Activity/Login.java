@@ -22,17 +22,13 @@ import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.auth.api.identity.SignInClient;
 import com.google.android.gms.auth.api.identity.SignInCredential;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -82,28 +78,16 @@ public class Login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 email = edtEmail.getText().toString().trim();
-                pass =edtPass.getText().toString().trim();
-                if(!email.isEmpty() || !pass.isEmpty()){
-                    if(email.contains("@gmail.com")){
+                pass = edtPass.getText().toString().trim();
+                if (!email.isEmpty() && !pass.isEmpty()) {
+                    if (email.contains("@gmail.com")) {
                         showProgressDialog();
-                        mAuth.signInWithEmailAndPassword(email, pass)
-                                .addOnCompleteListener(Login.this, new OnCompleteListener<AuthResult>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<AuthResult> task) {
-                                        if (task.isSuccessful()) {
-                                            getDataUser(email);
-                                        } else {
-                                            StyleableToast.makeText(Login.this, "Đăng Nhập Thất Bại. Vui Lòng Kiểm Tra Tài Khoản Hoặc Mật Khẩu !", Toast.LENGTH_LONG, R.style.fail).show();
-                                            hideProgressDialog();
-                                        }
-                                    }
-                                });
-
-                    }else {
+                        getDataUser(email, pass);
+                    } else {
                         StyleableToast.makeText(Login.this, "Email Không Đúng Định Dạng !", Toast.LENGTH_LONG, R.style.fail).show();
                     }
-                }else {
-                    StyleableToast.makeText(Login.this, "Vui Lòng  Điền Đày Đủ Thông Tin !", Toast.LENGTH_LONG, R.style.fail).show();
+                } else {
+                    StyleableToast.makeText(Login.this, "Vui Lòng Điền Đày Đủ Thông Tin !", Toast.LENGTH_LONG, R.style.fail).show();
                 }
             }
         });
@@ -152,23 +136,27 @@ public class Login extends AppCompatActivity {
                     mAuth.signInWithCredential(firebaseCredential)
                             .addOnCompleteListener(this, task -> {
                                 if (task.isSuccessful()) {
-                                     user = mAuth.getCurrentUser();
+                                    user = mAuth.getCurrentUser();
                                     String id = user.getUid();
                                     String email = user.getEmail();
-                                    createUserMonggo(id,email);
+                                    createUserMonggo(id, email);
                                 } else {
                                     Log.w("TAG1", "signInWithCredential:failure", task.getException());
+                                    StyleableToast.makeText(Login.this, "Đăng nhập Google thất bại!", Toast.LENGTH_LONG, R.style.fail).show();
                                 }
                             });
+                } else {
+                    Log.e("TAG1", "Google ID Token is null");
+                    StyleableToast.makeText(Login.this, "Không thể nhận thông tin tài khoản Google!", Toast.LENGTH_LONG, R.style.fail).show();
                 }
             } catch (ApiException e) {
-                // Handle error
                 Log.e("TAG1", "One Tap sign-in failed: " + e.getLocalizedMessage());
+                StyleableToast.makeText(Login.this, "Đăng nhập thất bại! Thử lại sau.", Toast.LENGTH_LONG, R.style.fail).show();
             }
         }
     }
-    public void getDataUser(String email) {
-        apiUser.getUser(email, new ApiCallback() {
+    public void getDataUser(String email,String pass) {
+        apiUser.getUser(email, pass,new ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 runOnUiThread(new Runnable() {
@@ -180,11 +168,9 @@ public class Login extends AppCompatActivity {
                             return;
                         }
                         try {
-                            JSONArray jsonArray = new JSONArray(response);
-
+                            JSONObject jsonObject = new JSONObject(response);
                             // Check if the array has elements before trying to access them
-                            if (jsonArray.length() > 0) {
-                                JSONObject jsonObject = jsonArray.getJSONObject(0);
+                            if (jsonObject.length() > 0) {
                                 String id = jsonObject.getString("_id");
                                 JSONObject jsonDetail = jsonObject.getJSONObject("details");
                                 String email = jsonDetail.getString("email");
@@ -207,6 +193,7 @@ public class Login extends AppCompatActivity {
                                 StyleableToast.makeText(Login.this, "Không tìm thấy dữ liệu người dùng!", Toast.LENGTH_LONG, R.style.fail).show();
                             }
                         } catch (JSONException e) {
+                            hideProgressDialog();
                             throw new RuntimeException(e);
                         }
                     }
@@ -226,21 +213,22 @@ public class Login extends AppCompatActivity {
         });
     }
     public void createUserMonggo(String id ,String email){
-        apiUser.createUser(email, id, new ApiCallback() {
+        apiUser.createUser(email, email, id, new ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        getDataUser(email);
+                        getDataUser(email,email);
                     }
                 });
             }
 
             @Override
             public void onError(String errorMessage) {
+                getDataUser(email,email);
                 if (errorMessage.equals("Đăng Kí Thất Bại. Tài Khoản Đã Tồn Tại!")){
-                    getDataUser(email);
+
                 }
             }
         });

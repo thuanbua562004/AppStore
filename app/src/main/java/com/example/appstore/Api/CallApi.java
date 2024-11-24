@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.example.appstore.Interface.ApiCallback;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -20,18 +21,11 @@ public class CallApi {
 
     private OkHttpClient client = new OkHttpClient();
 
-    public void getUser(String email, ApiCallback callback) {
-        String url = "http://10.0.2.2:3000/api/user";
-
-        String json = "{\"email\":\"" + email + "\"}";
-        RequestBody body = RequestBody.create(
-                json,
-                MediaType.get("application/json; charset=utf-8")
-        );
-
+    public void getUser(String email, String pass, ApiCallback callback) {
+        String url = "http://10.0.2.2:5000/api/user?email=" + email + "&password=" + pass;
         Request request = new Request.Builder()
                 .url(url)
-                .post(body)
+                .get()
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -39,28 +33,31 @@ public class CallApi {
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
                 Log.e("ApiService", "Yêu cầu không thành công", e);
-                callback.onError("Yêu cầu không thành công"+e);
+                callback.onError("Yêu cầu không thành công: " + e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String data = response.body().string();
-                if(response.isSuccessful()){
-                    if (response.code()==201){
+                if (response.isSuccessful() && response.body() != null) {
+                    String data = response.body().string();
+                    if (!data.isEmpty()) {
+                        Log.d("ApiService", "Yêu cầu thành công: " + data);
                         callback.onSuccess(data);
-                    }else if (data.isEmpty() && data.length()==0) {
-                        callback.onError("Error");
+                    } else {
+                        Log.e("ApiService", "Dữ liệu trả về rỗng");
+                        callback.onError("Dữ liệu trả về rỗng");
                     }
+                } else {
+                    Log.e("ApiService", "Yêu cầu thất bại với mã: " + response.code());
+                    callback.onError("Yêu cầu thất bại với mã: " + response.code());
                 }
             }
-
         });
-
     }
 
-    public void createUser(String email, String id, ApiCallback callback) {
-        String url = "http://10.0.2.2:3000/api/create-user";
-        String json = "{\"email\":\"" + email + "\", \"id\":\"" + id + "\"}";
+    public void createUser(String email, String pass,String id, ApiCallback callback) {
+        String url = "http://10.0.2.2:5000/api/user";
+        String json = "{\"email\":\"" + email + "\", \"id\":\"" + id + "\", \"password\":\"" + pass + "\"}";
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
 
         Request request = new Request.Builder()
@@ -103,7 +100,7 @@ public class CallApi {
     }
 
     public  void updateUser(String id , String name ,String address,String date ,String phone , ApiCallback callback){
-        String url = "http://10.0.2.2:3000/api/update-user";
+        String url = "http://10.0.2.2:5000/api/user";
         String json = "{\"id\":\"" + id + "\", \"name\":\"" + name + "\", \"address\":\"" + address + "\", \"dateBirth\":\"" + date + "\", \"phone\":\"" + phone + "\"}";        RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
 
@@ -137,7 +134,7 @@ public class CallApi {
         });
     }
     public void getListProduct (ApiCallback callback){
-        String url = "http://10.0.2.2:3000/api/product";
+        String url = "http://10.0.2.2:5000/api/product";
         Request request =new  Request.Builder()
                 .url(url)
                 .get()
@@ -169,7 +166,7 @@ public class CallApi {
         });
     }
     public  void  getListNotifi (ApiCallback callback){
-        String url = "http://10.0.2.2:3000/api/notifi";
+        String url = "http://10.0.2.2:5000/api/notifi";
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -197,7 +194,7 @@ public class CallApi {
     }
 
     public void addToCart (String userId ,String id_color_size,String color ,String id_product,String imgProduct,String nameProduct,int number,int price,String size,ApiCallback apiCallback){
-        String url = "http://10.0.2.2:3000/api/add-cart";
+        String url = "http://10.0.2.2:5000/api/add-cart";
         String json = "{"
                 + "\"userId\":\"" + userId + "\","
                 + "\"id_color_size\":\"" + id_color_size + "\","
@@ -236,7 +233,7 @@ public class CallApi {
     }
 
     public  void getCart(String userId,ApiCallback callback){
-        String url ="http://10.0.2.2:3000/api/cart";
+        String url ="http://10.0.2.2:5000/api/cart";
         String json = "{\"id\":\"" + userId + "\"}";
         RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
         Request request = new Request.Builder()
@@ -258,7 +255,7 @@ public class CallApi {
         });
     }
     public  void updateCart(String userId ,String id_size_color ,Integer Number,ApiCallback callback ){
-        String url ="http://10.0.2.2:3000/api/update-cart";
+        String url ="http://10.0.2.2:5000/api/update-cart";
         String json = "{\"userid\":\"" + userId + "\", \"color_size\":\"" + id_size_color + "\", \"number\":\"" + Number + "\"}";
         RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
 
@@ -282,7 +279,7 @@ public class CallApi {
     }
 
     public  void deleteItemCart(String userId ,String id_size_color, ApiCallback callback ){
-        String url ="http://10.0.2.2:3000/api/delItems-cart";
+        String url ="http://10.0.2.2:5000/api/delItems-cart";
         String json = "{\"userid\":\"" + userId + "\", \"color_size\":\"" + id_size_color + "\"}";
         RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
 
@@ -306,7 +303,7 @@ public class CallApi {
     }
 
     public  void deleteCart(String userId){
-        String url ="http://10.0.2.2:3000/api/del-cart";
+        String url ="http://10.0.2.2:5000/api/del-cart";
         String json = "{\"userid\":\"" + userId + "\"}";
         RequestBody requestBody = RequestBody.create(json,MediaType.get("application/json; charset=utf-8"));
 
@@ -329,9 +326,11 @@ public class CallApi {
         });
     }
     public void saveHistoryBuy(String id , String address, String method, Integer totalPrice, String phone, String listProduct , ApiCallback callback){
-        String url ="http://10.0.2.2:3000/api/history-buy";
+        String url ="http://10.0.2.2:5000/api/buy";
+        String id_order = UUID.randomUUID().toString();
         String json =
-                "{ \"id\":\"" + id +
+                        "{ \"id\":\"" + id +
+                        "\", \"id_order\":\"" + id_order +
                         "\", \"address\":\"" + address +
                         "\", \"method\":\"" + method +
                         "\", \"totalPrice\":" + totalPrice +
@@ -347,25 +346,29 @@ public class CallApi {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.i("history", "loi:" );
                 callback.onError(e.getMessage());
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                Log.i("history", "onSuccess: " + response);
                 if (response.isSuccessful()){
                     callback.onSuccess(response.body().string());
-                }
-
+                }else{
+                    callback.onError("Request failed with code: " + response.code());                }
             }
         });
     }
 
-    public void getHistoryBuy (ApiCallback callback){
-        String url ="http://10.0.2.2:3000/api/history-buy";
-        Request  request = new Request.Builder()
+    public void getHistoryBuy(String id, ApiCallback callback) {
+        String url = String.format( "http://10.0.2.2:5000/api/buy/" + id);
+        Log.i("History", "getHistoryBuy: " + url);
+        Request request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
+
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -374,11 +377,14 @@ public class CallApi {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()){
+                if (response.isSuccessful()) {
+                    Log.i("history", "onResponse: " + response);
                     callback.onSuccess(response.body().string());
+                } else {
+                    callback.onError("Request failed: " + response.message());
                 }
-
             }
         });
     }
+
 }

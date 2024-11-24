@@ -98,10 +98,10 @@ public class PayActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void setupCheckoutButton() {
         checkOut.setOnClickListener(v -> {
-         if(edtadress.getText().toString().trim().equals("") || edtphoneNumber.getText().toString().trim().equals("") ){
-             StyleableToast.makeText(PayActivity.this, "Vui lòng  không để  trắng thông tin!", Toast.LENGTH_LONG, R.style.success).show();
-             return;
-         }
+            if(edtadress.getText().toString().trim().equals("") || edtphoneNumber.getText().toString().trim().equals("") ){
+                StyleableToast.makeText(PayActivity.this, "Vui lòng  không để  trắng thông tin!", Toast.LENGTH_LONG, R.style.success).show();
+                return;
+            }
             String methodPay = getSelectedPaymentMethod();
             if (methodPay.equals("Qua Ngân Hàng")) {
                 getPayMoMo();
@@ -213,16 +213,14 @@ public class PayActivity extends AppCompatActivity {
         Gson gson = new Gson();
         String jsonString = gson.toJson(list);
 
-        callApi.saveHistoryBuy(id + "_" + key, address, methodPay, totalPrice, phoneNumber, jsonString, new ApiCallback() {
+        callApi.saveHistoryBuy(id, address, methodPay, totalPrice, phoneNumber, jsonString, new ApiCallback() {
             @Override
             public void onSuccess(String response) {
-                Log.i("history", "onSuccess: " + response);
                 deleteCart(id);
             }
 
             @Override
             public void onError(String errorMessage) {
-                Log.i("history", "onError: " + errorMessage);
             }
         });
     }

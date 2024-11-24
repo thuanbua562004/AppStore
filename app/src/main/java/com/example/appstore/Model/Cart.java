@@ -24,6 +24,13 @@ public class Cart implements Serializable {
         this.price = price;
     }
 
+    public Cart(String nameProduct, int number, String size, int price) {
+        this.nameProduct = nameProduct;
+        this.number = number;
+        this.size = size;
+        this.price = price;
+    }
+
     public String getNameProduct() {
         return nameProduct;
     }
