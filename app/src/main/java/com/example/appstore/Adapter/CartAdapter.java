@@ -51,8 +51,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     @Override
     public void onBindViewHolder(@NonNull CartViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Cart cart = listCart.get(position);
+        String img = cart.getImgProduct();
+        String imgUrl = img.replace("5000", "10.0.2.2:5000");
+        String i = imgUrl.replace("localhost:","");
         Glide.with(holder.itemView.getContext())
-                .load(cart.getImgProduct())
+                .load(i)
                 .apply(RequestOptions.bitmapTransform(new CircleCrop()))
                 .into(holder.imgProduct);
 

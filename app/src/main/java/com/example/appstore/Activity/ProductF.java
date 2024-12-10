@@ -18,15 +18,13 @@ import com.example.appstore.Api.CallApi;
 import com.example.appstore.Interface.ApiCallback;
 import com.example.appstore.Model.Product;
 import com.example.appstore.R;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,51 +59,50 @@ public class ProductF extends Fragment {
             @Override
             public void onSuccess(String response) {
                 Log.i("ListPro", "onSuccess: " + response);
+                Map<String, String> colorMap = new HashMap<>();
+                Map<String, String> sizeMap = new HashMap<>();
+                sizeMap.put("L","M");
+                sizeMap.put("L","M");
+                String img1 = "";
                 try {
-
-                    Gson gson = new Gson();
-                    Type type = new TypeToken<Map<String, String>>() {}.getType();
                     JSONArray jsonArray = new JSONArray(response);
-                    for (int i = 0; i < jsonArray.length(); i++) {
+                    for (int i = 0; i <jsonArray.length() ; i++) {
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
-                        try {
-                            String id_pro = jsonObject.getString("_id");
-                            JSONObject jsonDetail = jsonObject.getJSONObject("details");
-                            String name = jsonDetail.getString("name");
-                            Integer price = Integer.valueOf(jsonDetail.getString("price"));
-                            String img1 = jsonDetail.getString("img1");
-                            String info = jsonDetail.getString("info");
+                        String id_pro = jsonObject.getString("_id");
+                        JSONObject jsonDetail = jsonObject.getJSONObject("details");
+                        Log.i("1", "onSuccess: "+ jsonDetail);
+                        String name = jsonDetail.optString("name", "Unknown Name");
+                        int price = jsonDetail.optInt("price", 0);
+                        String info = jsonDetail.optString("info", "No Info");
 
-                            JSONObject colorObject = jsonDetail.getJSONObject("color");
-                            JSONObject sizeObject = jsonDetail.getJSONObject("size");
+                        // Parse imgForColor and extract img1
+                        JSONArray imgForColorArray = jsonDetail.optJSONArray("imgForColor");
+                        JSONObject colorVariant1 = imgForColorArray.getJSONObject(0);
+                        img1 =colorVariant1.getString("imageUrl");
+                        Log.i("1", "onSuccess: " + img1);
+                        for (int j = 0; j < imgForColorArray.length(); j++) {
+                            JSONObject colorVariant = imgForColorArray.getJSONObject(j);
 
-                            Map<String, String> colorMap = gson.fromJson(colorObject.toString(), type);
-                            Map<String, String> sizeMap = gson.fromJson(sizeObject.toString(), type);
-
-                            Product product = new Product(colorMap, sizeMap, price, name, "Ao", img1, "", info,id_pro);
-                            list.add(product);
-                        } catch (JSONException e) {
-                            Log.e("ListPro", "Error parsing JSON object at index " + i + ": " + e.getMessage());
+                            Log.i("1", "onSuccess: "+ colorVariant);
+                            colorMap.put(String.valueOf(j),colorVariant.getString("color"));
                         }
+                        Product product = new Product(colorMap, sizeMap, price, name, "Ao", img1, "", info, id_pro);
+                        list.add(product);
                     }
-
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                productAdapter.notifyDataSetChanged();
-                            }
-                        });
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        productAdapter.notifyDataSetChanged();
                     }
+                });
                 } catch (JSONException e) {
-                    Log.e("ListPro", "Error parsing JSON response: " + e.getMessage());
+                    throw new RuntimeException(e);
                 }
             }
 
             @Override
             public void onError(String errorMessage) {
-                Log.e("product", "onDataChange: " + errorMessage);
-                // Optionally show an error message to the user
+                Log.e("ListPro", "API Error: " + errorMessage);
             }
         });
     }

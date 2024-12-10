@@ -57,9 +57,12 @@ public class ProductAdapter  extends  RecyclerView.Adapter<ProductAdapter.Produc
             Log.i("TAG1", "onBindViewHolder: Product is null at position " + position);
             return;
         }
-
+        String img = product.getImg1();
+        String imgUrl = img.replace("5000", "10.0.2.2:5000");
+        String i = imgUrl.replace("localhost:","");
         Glide.with(holder.itemView.getContext())
-                .load(product.getImg1())
+
+                .load(i)
                 .apply(RequestOptions.bitmapTransform(new CircleCrop()))
                 .into(holder.imgProduct);
 

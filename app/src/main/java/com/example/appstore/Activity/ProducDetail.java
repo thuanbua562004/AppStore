@@ -147,8 +147,11 @@ public class ProducDetail extends AppCompatActivity {
         txtInfoProduct.setText(text.toString());
         txtPrice.setText(String.valueOf(vn.format(product.getPrice())) + " VND");
         titleTxt.setText(product.getName().toString());
+        String img = product.getImg1();
+        String imgUrl = img.replace("5000", "10.0.2.2:5000");
+        String i = imgUrl.replace("localhost:","");
         Glide.with(this)
-                .load(product.getImg1())
+                .load(i)
                 .apply(RequestOptions.bitmapTransform(new RoundedCorners(16)))
                 .into(imgProduct);
     }
