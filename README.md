@@ -11,9 +11,6 @@
 
 ---
 
-## Mô tả dự án
-Đồ án VAA tập trung vào việc [mô tả ngắn gọn mục tiêu hoặc nội dung dự án]. Dự án được thực hiện nhằm đáp ứng các yêu cầu học thuật của Khoa Công nghệ Thông tin tại Học viện Hàng không Việt Nam.
-
 ---
 
 ## Liên kết quan trọng
